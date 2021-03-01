@@ -1,13 +1,63 @@
-pragma solidity =0.5.16;
+// Dependency file: contracts\interfaces\ITopdevERC20.sol
 
-import './interfaces/IPancakeERC20.sol';
-import './libraries/SafeMath.sol';
+// pragma solidity >=0.5.0;
 
-contract PancakeERC20 is IPancakeERC20 {
+interface ITopdevERC20 {
+    event Approval(address indexed owner, address indexed spender, uint value);
+    event Transfer(address indexed from, address indexed to, uint value);
+
+    function name() external pure returns (string memory);
+    function symbol() external pure returns (string memory);
+    function decimals() external pure returns (uint8);
+    function totalSupply() external view returns (uint);
+    function balanceOf(address owner) external view returns (uint);
+    function allowance(address owner, address spender) external view returns (uint);
+
+    function approve(address spender, uint value) external returns (bool);
+    function transfer(address to, uint value) external returns (bool);
+    function transferFrom(address from, address to, uint value) external returns (bool);
+
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
+    function PERMIT_TYPEHASH() external pure returns (bytes32);
+    function nonces(address owner) external view returns (uint);
+
+    function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
+}
+
+
+// Dependency file: contracts\libraries\SafeMath.sol
+
+// pragma solidity =0.5.16;
+
+// a library for performing overflow-safe math, courtesy of DappHub (https://github.com/dapphub/ds-math)
+
+library SafeMath {
+    function add(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x, 'ds-math-add-overflow');
+    }
+
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x, 'ds-math-sub-underflow');
+    }
+
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x, 'ds-math-mul-overflow');
+    }
+}
+
+
+// Dependency file: contracts\TopdevERC20.sol
+
+// pragma solidity =0.5.16;
+
+// import 'contracts\interfaces\ITopdevERC20.sol';
+// import 'contracts\libraries\SafeMath.sol';
+
+contract TopdevERC20 is ITopdevERC20 {
     using SafeMath for uint;
 
-    string public constant name = 'Pancake LPs';
-    string public constant symbol = 'Cake-LP';
+    string public constant name = 'Topdev LPs';
+    string public constant symbol = 'Top-LP';
     uint8 public constant decimals = 18;
     uint  public totalSupply;
     mapping(address => uint) public balanceOf;
@@ -79,7 +129,7 @@ contract PancakeERC20 is IPancakeERC20 {
     }
 
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external {
-        require(deadline >= block.timestamp, 'Pancake: EXPIRED');
+        require(deadline >= block.timestamp, 'Topdev: EXPIRED');
         bytes32 digest = keccak256(
             abi.encodePacked(
                 '\x19\x01',
@@ -88,7 +138,20 @@ contract PancakeERC20 is IPancakeERC20 {
             )
         );
         address recoveredAddress = ecrecover(digest, v, r, s);
-        require(recoveredAddress != address(0) && recoveredAddress == owner, 'Pancake: INVALID_SIGNATURE');
+        require(recoveredAddress != address(0) && recoveredAddress == owner, 'Topdev: INVALID_SIGNATURE');
         _approve(owner, spender, value);
+    }
+}
+
+
+// Root file: contracts\test\ERC20.sol
+
+pragma solidity =0.5.16;
+
+// import 'contracts\TopdevERC20.sol';
+
+contract ERC20 is TopdevERC20 {
+    constructor(uint _totalSupply) public {
+        _mint(msg.sender, _totalSupply);
     }
 }
